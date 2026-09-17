@@ -2,3 +2,5 @@
 .venv/
 __pycache__/
 *.pyc
+*.pdf
+bai_tap_tuan_2_slide
