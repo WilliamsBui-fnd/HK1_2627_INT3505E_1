@@ -4,12 +4,11 @@ app = Flask(__name__)
 BOOKS = []
 _next_id = 1
 
+
 @app.get("/books")
 def list_books():
-    return jsonify({
-        "data": BOOKS,
-        "total": len(BOOKS)
-    }), 200
+    return jsonify({"data": BOOKS, "total": len(BOOKS)}), 200
+
 
 @app.post("/books")
 def create_book():
@@ -27,6 +26,7 @@ def create_book():
     resp = make_response(jsonify(book), 201)
     resp.headers["Location"] = f"/books/{book['id']}"
     return resp
+
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5000, debug=True)
