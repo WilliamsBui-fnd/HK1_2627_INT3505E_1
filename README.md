@@ -62,3 +62,44 @@ Content-Type: application/problem+json
   "type": "https://api.example.com/probs/order-not-found"
 }
 ```
+
+---
+
+##  Tuần 3: Lab 1 - Thiết kế Resource cho Blog API
+*Bài tập: Xây dựng cấu trúc RESTful API cho nền tảng Blog đơn giản.*
+
+**Danh sách các API sẽ có (Thiết kế Endpoint):**
+- `GET /api/v1/users` - Danh sách người dùng
+- `GET /api/v1/users/{id}/followers` - Danh sách người theo dõi user này
+- `GET /api/v1/posts` - Lấy danh sách bài viết
+- `POST /api/v1/posts` - Tạo bài viết mới
+- `GET /api/v1/posts/{id}/comments` - Lấy danh sách bình luận của 1 bài viết
+
+**Lệnh khởi chạy Server:**
+```bash
+cd Tuan_3
+python3 lab1_blog_api.py
+```
+
+**Lệnh Test:**
+```bash
+# Lấy danh sách bài viết (Kết quả mock)
+curl -i http://127.0.0.1:5000/api/v1/posts
+
+HTTP/1.1 200 OK
+[]
+
+# Tạo bài viết mới
+curl -i -X POST http://127.0.0.1:5000/api/v1/posts \
+     -H "Content-Type: application/json" \
+     -d '{"title": "Học REST", "content": "Rất hay", "author_id": 42}'
+
+HTTP/1.1 201 CREATED
+Location: /api/v1/posts/1
+{
+  "id": 1,
+  "title": "Học REST",
+  "content": "Rất hay",
+  "author_id": 42
+}
+```
