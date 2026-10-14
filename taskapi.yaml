@@ -1,0 +1,311 @@
+openapi: 3.0.3
+info:
+  title: Tasks API
+  version: 1.0.0
+  description: Bài tập B4 — quản lý task nội bộ. Authorize bằng token demo-token khi
+    chạy mặc định.
+servers:
+- url: /
+  description: Cùng máy chủ phục vụ Swagger UI
+tags:
+- name: tasks
+  description: Quản lý công việc
+security:
+- bearerAuth: []
+paths:
+  /tasks:
+    get:
+      tags:
+      - tasks
+      operationId: listTasks
+      summary: Danh sách task
+      responses:
+        '200':
+          $ref: '#/components/responses/TaskPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: Không truyền status thì lấy mọi trạng thái. Trả tối đa limit task
+        theo thứ tự tạo; total tính trước giới hạn.
+      parameters:
+      - $ref: '#/components/parameters/PageLimit'
+      - $ref: '#/components/parameters/StatusFilter'
+    post:
+      tags:
+      - tasks
+      operationId: createTask
+      summary: Tạo task
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskInput'
+      description: Server sinh UUID. Nếu bỏ qua status/priority, dùng open/normal.
+        dueDate và assigneeId là tùy chọn.
+  /tasks/{taskId}:
+    parameters:
+    - $ref: '#/components/parameters/TaskId'
+    get:
+      tags:
+      - tasks
+      operationId: getTaskById
+      summary: Xem task
+      responses:
+        '200':
+          $ref: '#/components/responses/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+      - tasks
+      operationId: patchTask
+      summary: Cập nhật một phần task
+      responses:
+        '200':
+          $ref: '#/components/responses/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskInput'
+      description: Chỉ thay trường được gửi; giữ nguyên các trường còn lại. Không
+        nhận object rỗng, null, id hay trường lạ.
+    delete:
+      tags:
+      - tasks
+      operationId: deleteTask
+      summary: Xóa task
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Token cố định cho demo, không phải JWT. Mặc định: demo-token.'
+  parameters:
+    TaskId:
+      name: taskId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      example: 1750dc35-ff93-4ce9-aecb-2b05a2f96b42
+    PageLimit:
+      name: limit
+      in: query
+      description: Số task tối đa trả về
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+    StatusFilter:
+      name: status
+      in: query
+      description: Bỏ qua để lấy cả open và done
+      schema:
+        type: string
+        enum:
+        - open
+        - done
+  schemas:
+    Task:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - title
+      - status
+      - priority
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 1750dc35-ff93-4ce9-aecb-2b05a2f96b42
+        title: &id001
+          type: string
+          minLength: 1
+          pattern: \S
+          example: Hoàn thành bài tập B4
+        status: &id002
+          type: string
+          enum:
+          - open
+          - done
+          example: open
+        priority: &id003
+          type: string
+          enum:
+          - low
+          - normal
+          - high
+          example: normal
+        dueDate: &id004
+          type: string
+          format: date
+          example: '2026-10-18'
+        assigneeId: &id005
+          type: string
+          format: uuid
+          example: fbd55e71-dcb5-49b5-916c-fdcace9b41fb
+    CreateTaskInput:
+      type: object
+      additionalProperties: false
+      required:
+      - title
+      properties: &id006
+        title: *id001
+        status: *id002
+        priority: *id003
+        dueDate: *id004
+        assigneeId: *id005
+      example:
+        title: Hoàn thành bài tập B4
+        priority: high
+        dueDate: '2026-10-18'
+    UpdateTaskInput:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties: *id006
+      example:
+        status: done
+    TaskPage:
+      type: object
+      required:
+      - items
+      - total
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+        total:
+          type: integer
+          minimum: 0
+    Error:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      - detail
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+  responses:
+    Task:
+      description: Task hiện tại
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Task'
+    Created:
+      description: Đã tạo task
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Task'
+      headers:
+        Location:
+          description: Đường dẫn task vừa tạo
+          schema:
+            type: string
+          example: /tasks/1750dc35-ff93-4ce9-aecb-2b05a2f96b42
+    TaskPage:
+      description: items bị giới hạn bởi limit; total là số task khớp bộ lọc
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TaskPage'
+    NoContent:
+      description: Đã xóa task; không có body
+    BadRequest:
+      description: JSON, Content-Type hoặc tham số không hợp lệ
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            type: about:blank
+            title: BadRequest
+            status: 400
+            detail: JSON, Content-Type hoặc tham số không hợp lệ
+    Unauthorized:
+      description: Thiếu hoặc sai Bearer token
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            type: about:blank
+            title: Unauthorized
+            status: 401
+            detail: Thiếu hoặc sai Bearer token
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+          example: Bearer
+    NotFound:
+      description: Không tìm thấy task
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            type: about:blank
+            title: NotFound
+            status: 404
+            detail: Không tìm thấy task
+    ValidationError:
+      description: JSON không đúng schema
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            type: about:blank
+            title: ValidationError
+            status: 422
+            detail: JSON không đúng schema
