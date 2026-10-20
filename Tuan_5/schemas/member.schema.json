@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://library.example.com/schemas/member.schema.json",
+  "title": "Member",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "fullName", "email", "status", "joinedAt"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^member_[1-9][0-9]*$"
+    },
+    "fullName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "maxLength": 254
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "suspended", "closed"]
+    },
+    "joinedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

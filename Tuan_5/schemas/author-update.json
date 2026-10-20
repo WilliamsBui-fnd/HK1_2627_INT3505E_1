@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "minProperties": 1,
+  "properties": {
+    "name": {"type": "string", "minLength": 1, "maxLength": 120},
+    "bio": {"type": ["string", "null"], "maxLength": 5000}
+  }
+}

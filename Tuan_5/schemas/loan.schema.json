@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://library.example.com/schemas/loan.schema.json",
+  "title": "Loan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "member", "items", "status", "createdAt"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^loan_[1-9][0-9]*$"
+    },
+    "member": {
+      "$ref": "#/$defs/memberSummary"
+    },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/loanItem"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "partially-returned", "returned", "overdue"]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "memberSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "fullName"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^member_[1-9][0-9]*$"
+        },
+        "fullName": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "bookSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^book_[1-9][0-9]*$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "loanItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["copyId", "book", "borrowedAt", "dueAt", "returnedAt"],
+      "properties": {
+        "copyId": {
+          "type": "string",
+          "pattern": "^copy_[1-9][0-9]*$"
+        },
+        "book": {
+          "$ref": "#/$defs/bookSummary"
+        },
+        "borrowedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "dueAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "returnedAt": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}

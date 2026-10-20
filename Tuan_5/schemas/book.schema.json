@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://library.example.com/schemas/book.schema.json",
+  "title": "Book",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "title",
+    "isbn",
+    "genre",
+    "authors",
+    "price",
+    "stock",
+    "inStock",
+    "publishedAt",
+    "createdAt"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^book_[1-9][0-9]*$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "isbn": {
+      "type": "string",
+      "pattern": "^[0-9]{13}$"
+    },
+    "genre": {
+      "$ref": "#/$defs/genre"
+    },
+    "authors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/author"
+      }
+    },
+    "price": {
+      "$ref": "#/$defs/money"
+    },
+    "stock": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "inStock": {
+      "type": "boolean"
+    },
+    "publishedAt": {
+      "type": "string",
+      "format": "date"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "genre": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "slug"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^genre_[1-9][0-9]*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "slug": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        }
+      }
+    },
+    "author": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "role"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^author_[1-9][0-9]*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "type": "string",
+          "enum": ["lead", "co", "editor"]
+        }
+      }
+    },
+    "money": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["amount", "currency"],
+      "properties": {
+        "amount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "currency": {
+          "const": "VND"
+        }
+      }
+    }
+  }
+}

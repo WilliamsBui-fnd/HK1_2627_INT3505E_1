@@ -1,0 +1,345 @@
+{
+  "info": {
+    "_postman_id": "8a88a707-795c-4de9-a1d8-5dc592524305",
+    "name": "SOA Week 5 - Labs and Homework",
+    "description": "Lab 1 CRUD và relationships; Lab 2 offset/cursor pagination, filtering và multi-key sorting.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/health"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Service is healthy', function () { pm.expect(pm.response.json().status).to.eql('ok'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Lab 1 - Models and CRUD",
+      "item": [
+        {
+          "name": "Create category",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lab Category\",\n  \"slug\": \"lab-{{$timestamp}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/categories"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Created', function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set('categoryId', Number(pm.response.json().id.split('_')[1]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create author",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lab Author\",\n  \"bio\": \"Created from Postman\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/authors"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Created', function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set('authorId', Number(pm.response.json().id.split('_')[1]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create user",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"lab.{{$timestamp}}@example.com\",\n  \"displayName\": \"Lab User\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/users"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Created', function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set('userId', Number(pm.response.json().id.split('_')[1]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create book",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"REST API Lab\",\n  \"isbn\": \"978{{$timestamp}}\",\n  \"priceVnd\": 390000,\n  \"stock\": 10,\n  \"categoryId\": {{categoryId}},\n  \"publishedAt\": \"2026-10-20\",\n  \"authors\": [{\"authorId\": 1, \"role\": \"lead\"}]\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/books"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Created', function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set('bookId', Number(pm.response.json().id.split('_')[1]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add author to book",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"authorId\": {{authorId}},\n  \"role\": \"co\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/books/{{bookId}}/authors"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Relationship created', function () { pm.response.to.have.status(201); });"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create review",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"rating\": 5,\n  \"content\": \"Lab review\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/books/{{bookId}}/reviews"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Created', function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set('reviewId', Number(pm.response.json().id.split('_')[1]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update review",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 4,\n  \"content\": \"Updated review\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/reviews/{{reviewId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Updated', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Rating is 4', function () { pm.expect(pm.response.json().rating).to.eql(4); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get author books",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/authors/{{authorId}}/books"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Contains linked book', function () { pm.expect(pm.response.json().total).to.eql(1); });"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cleanup review",
+          "request": {"method": "DELETE", "url": "{{baseUrl}}/api/v1/reviews/{{reviewId}}"},
+          "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Deleted', function () { pm.response.to.have.status(204); });"]}}]
+        },
+        {
+          "name": "Cleanup book",
+          "request": {"method": "DELETE", "url": "{{baseUrl}}/api/v1/books/{{bookId}}"},
+          "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Deleted', function () { pm.response.to.have.status(204); });"]}}]
+        },
+        {
+          "name": "Cleanup user",
+          "request": {"method": "DELETE", "url": "{{baseUrl}}/api/v1/users/{{userId}}"},
+          "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Deleted', function () { pm.response.to.have.status(204); });"]}}]
+        },
+        {
+          "name": "Cleanup author",
+          "request": {"method": "DELETE", "url": "{{baseUrl}}/api/v1/authors/{{authorId}}"},
+          "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Deleted', function () { pm.response.to.have.status(204); });"]}}]
+        },
+        {
+          "name": "Cleanup category",
+          "request": {"method": "DELETE", "url": "{{baseUrl}}/api/v1/categories/{{categoryId}}"},
+          "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Deleted', function () { pm.response.to.have.status(204); });"]}}]
+        }
+      ]
+    },
+    {
+      "name": "Lab 2 - Pagination, filtering and sorting",
+      "item": [
+        {
+          "name": "Offset pagination",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/books?strategy=offset&offset=0&limit=5&sort=-price,title"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Offset metadata', function () { const body = pm.response.json(); pm.expect(body.pagination.strategy).to.eql('offset'); pm.expect(body.pagination.total).to.be.a('number'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cursor first page",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/books?strategy=cursor&limit=3&genre=tech&sort=-price,title"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('nextCursor', body.pagination.nextCursor || '');",
+                  "pm.test('Only tech books', function () { pm.expect(body.data.every(item => item.genre.slug === 'tech')).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cursor next page",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/books?strategy=cursor&limit=3&genre=tech&sort=-price,title&cursor={{nextCursor}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', function () { pm.response.to.have.status(200); });"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Category filter",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/books?strategy=cursor&category=1&sort=-id&limit=5"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Category filter applied', function () { pm.expect(pm.response.json().filters.category).to.eql(1); });"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalid sort",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/books?sort=-secret"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Structured error', function () { pm.expect(pm.response.json().error.code).to.eql('invalid_sort'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {"key": "baseUrl", "value": "http://127.0.0.1:5000", "type": "string"},
+    {"key": "categoryId", "value": "1", "type": "number"},
+    {"key": "authorId", "value": "1", "type": "number"},
+    {"key": "userId", "value": "1", "type": "number"},
+    {"key": "bookId", "value": "1", "type": "number"},
+    {"key": "reviewId", "value": "1", "type": "number"},
+    {"key": "nextCursor", "value": "", "type": "string"}
+  ]
+}
