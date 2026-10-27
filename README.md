@@ -114,3 +114,15 @@ Location: /api/v1/posts/1
   "author_id": 42
 }
 ```
+
+---
+
+Tuần 6: Authentication và Authorization
+
+Bài làm gồm 4 lab Basic Auth, API Key, JWT, RBAC và bài tập OpenAPI social-network cuối slide.
+
+Hướng dẫn cài đặt, chạy và kiểm tra: [Tuan_6/README.md](Tuan_6/README.md).
+
+Đặc tả API: [Tuan_6/openapi.yaml](Tuan_6/openapi.yaml).
+
+Security audit: [Tuan_6/SecurityAudit.md](Tuan_6/SecurityAudit.md).

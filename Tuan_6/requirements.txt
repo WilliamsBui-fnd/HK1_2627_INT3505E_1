@@ -1,0 +1,5 @@
+Flask>=3.1,<4
+Flask-HTTPAuth>=4.8,<5
+Flask-JWT-Extended>=4.7,<5
+bcrypt>=4.2,<6
+cryptography>=44

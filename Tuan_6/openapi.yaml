@@ -1,0 +1,257 @@
+openapi: 3.1.0
+info:
+  title: Social Network Authentication API
+  version: 1.0.0
+  description: >-
+    Bài tập cuối slide buổi 6 của Bùi Đình Cảnh, 24021392.
+    Login nội bộ cấp JWT, không phải OAuth 2.0 Password grant.
+    Scope của HTTP Bearer được mô tả bằng x-required-scopes và kiểm tra tại server.
+servers:
+  - url: https://127.0.0.1:5005
+tags:
+  - name: Authentication
+  - name: Posts
+paths:
+  /auth/login:
+    post:
+      tags: [Authentication]
+      operationId: login
+      summary: Xác thực email và mật khẩu
+      description: >-
+        Endpoint public, không yêu cầu token hoặc scope trước khi đăng nhập.
+        Scope được lấy từ database theo người dùng, client không được tự cấp quyền.
+        Trả access token 15 phút và refresh token có thời hạn phiên tối đa 30 ngày.
+        Login sai email, sai mật khẩu hoặc tài khoản bị khóa cùng trả 401 invalid_credentials.
+        Mật khẩu giới hạn 72 byte UTF-8 do bcrypt. Không lưu token vào localStorage.
+      security: []
+      x-required-scopes: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenPair'
+        '400':
+          description: JSON sai cú pháp, không phải object, thiếu trường, sai kiểu hoặc có trường lạ.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Email, mật khẩu không đúng hoặc tài khoản không hoạt động; invalid_credentials.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request body vượt quá 16384 byte.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: Content-Type không phải application/json hoặc kiểu JSON tương thích.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Vượt 10 lần xác thực trong 60 giây theo IP hoặc tài khoản.
+          headers:
+            Retry-After:
+              description: Số giây cần đợi trước khi thử lại.
+              schema:
+                type: integer
+                minimum: 1
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /auth/refresh:
+    post:
+      tags: [Authentication]
+      operationId: refreshTokens
+      summary: Xoay refresh token và cấp access token mới
+      description: >-
+        Dùng Authorization Bearer với refresh token, không dùng access token.
+        Không yêu cầu scope hành động; quyền refresh gắn với loại token và phiên còn hiệu lực.
+        Refresh token chỉ dùng một lần. Server cập nhật jti nguyên tử trong database,
+        nạp lại quyền hiện tại và trả cặp token mới. Dùng lại refresh token cũ thu hồi toàn bộ phiên.
+        Hạn phiên 30 ngày tính từ lần login, không được kéo dài mỗi lần refresh.
+      security:
+        - refreshToken: []
+      x-required-scopes: []
+      x-required-token-type: refresh
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenPair'
+        '401':
+          description: >-
+            Thiếu hoặc sai token; token_expired, invalid_token, token_revoked,
+            sai loại token, phiên hết hạn hoặc tài khoản không hoạt động.
+          headers:
+            WWW-Authenticate:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /posts/{id}:
+    get:
+      tags: [Posts]
+      operationId: getPost
+      summary: Đọc bài viết theo ID
+      description: >-
+        Yêu cầu access token và scope posts:read trong cả token lẫn quyền hiện tại trong database.
+        Bài viết public được đọc bởi mọi người dùng đã xác thực có scope.
+        Bài private chỉ cho tác giả hoặc admin; admin vẫn cần posts:read.
+        Không dùng refresh token thay access token. Trả 403 khi bài private thuộc người khác.
+      security:
+        - accessToken: []
+      x-required-scopes: ['posts:read']
+      x-required-token-type: access
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID nguyên dương, tối đa 18 chữ số.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 999999999999999999
+      responses:
+        '200':
+          description: Bài viết mà người dùng được phép đọc.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '400':
+          description: ID không phải số nguyên dương ASCII hoặc dài quá 18 chữ số.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Thiếu, sai, hết hạn, sai loại token, phiên bị thu hồi hoặc tài khoản bị khóa.
+          headers:
+            WWW-Authenticate:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Thiếu posts:read hoặc không phải tác giả/admin của bài private.
+          headers:
+            WWW-Authenticate:
+              description: Có khi thiếu scope, với error insufficient_scope và scope posts:read.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Bài viết không tồn tại.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  securitySchemes:
+    accessToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access JWT HS256, iss soa-week6, aud social_api, type access, thời hạn 900 giây.
+    refreshToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Refresh JWT HS256, type refresh, phiên tối đa 30 ngày, dùng một lần và có rotation.
+  schemas:
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          minLength: 1
+          maxLength: 254
+        password:
+          type: string
+          format: password
+          writeOnly: true
+          minLength: 1
+          maxLength: 72
+          x-max-utf8-bytes: 72
+    TokenPair:
+      type: object
+      additionalProperties: false
+      required: [access_token, refresh_token, token_type, expires_in, scope]
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        token_type:
+          type: string
+          const: Bearer
+        expires_in:
+          type: integer
+          minimum: 0
+          maximum: 900
+        scope:
+          type: string
+          description: Các scope được cấp, phân cách bằng dấu cách.
+    Post:
+      type: object
+      additionalProperties: false
+      required: [id, owner_id, title, content, visibility]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        owner_id:
+          type: integer
+          minimum: 1
+        title:
+          type: string
+        content:
+          type: string
+        visibility:
+          type: string
+          enum: [public, private]
+    Error:
+      type: object
+      additionalProperties: false
+      required: [error, detail]
+      properties:
+        error:
+          type: string
+        detail:
+          type: string
+  responses:
+    TokenPair:
+      description: Cặp token mới và scope hiện tại; không ghi token vào log hoặc repository.
+      headers:
+        Cache-Control:
+          schema:
+            type: string
+            const: no-store
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenPair'
