@@ -126,3 +126,9 @@ Hướng dẫn cài đặt, chạy và kiểm tra: [Tuan_6/README.md](Tuan_6/REA
 Đặc tả API: [Tuan_6/openapi.yaml](Tuan_6/openapi.yaml).
 
 Security audit: [Tuan_6/SecurityAudit.md](Tuan_6/SecurityAudit.md).
+
+---
+
+Tuần 7: Backend Service - Product API CRUD, Order/OrderItem, migrations, Docker Compose, health checks và pytest.
+
+Hướng dẫn chạy và kiểm tra: [Tuan_7/README.md](Tuan_7/README.md).

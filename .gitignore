@@ -5,3 +5,4 @@ __pycache__/
 *.pdf
 bai_tap_tuan_2_slide
 *.db
+.pytest_cache/
