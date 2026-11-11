@@ -2,15 +2,23 @@ openapi: 3.0.3
 info:
   title: Books API — Lab 08
   version: 1.0.0
-  description: |
-    Educational API. LAB 2: three *intentional* contract defects remain.
-    The application is the reference for intended behavior.
+  description: Educational Books API for Lab 08.
+  contact:
+    name: Lab 08
+    url: https://github.com/TrinhLK/lab08-starter
 servers:
   - url: http://localhost:5000
+tags:
+  - name: health
+    description: Service status
+  - name: books
+    description: Book resources
 paths:
   /health:
     get:
       operationId: healthCheck
+      tags: [health]
+      description: Health check of the service.
       responses:
         '200':
           description: Service is ready
@@ -22,7 +30,9 @@ paths:
                   status: {type: string}
   /books:
     get:
-      # LAB 2 intentional issue 1: operationId is missing.
+      operationId: listBooks
+      tags: [books]
+      description: List books, filter by author/year, 20 items per page.
       parameters:
         - in: query
           name: author
@@ -43,6 +53,8 @@ paths:
                 items: {$ref: '#/components/schemas/Book'}
     post:
       operationId: createBook
+      tags: [books]
+      description: Create a book; title and author are required.
       requestBody:
         required: true
         content:
@@ -64,6 +76,8 @@ paths:
         schema: {type: integer, minimum: 1}
     get:
       operationId: getBook
+      tags: [books]
+      description: Get one book by id.
       responses:
         '200':
           description: Book found
@@ -73,6 +87,8 @@ paths:
         '404': {$ref: '#/components/responses/NotFound'}
     put:
       operationId: updateBook
+      tags: [books]
+      description: Replace all fields of a book.
       requestBody:
         required: true
         content:
@@ -88,13 +104,11 @@ paths:
         '404': {$ref: '#/components/responses/NotFound'}
     delete:
       operationId: deleteBook
+      tags: [books]
+      description: Delete a book.
       responses:
         '204':
           description: Deleted (response has no body)
-          # LAB 2 intentional issue 2: 204 incorrectly declares a body.
-          content:
-            application/json:
-              schema: {type: object}
         '404': {$ref: '#/components/responses/NotFound'}
 components:
   schemas:

@@ -1,0 +1,32 @@
+extends: ["spectral:oas"]
+
+rules:
+  no-body-on-204:
+    description: Response 204 không được có body
+    severity: error
+    given: "$.paths.*.*.responses['204']"
+    then:
+      field: content
+      function: falsy
+
+  book-year-integer:
+    description: Book.year phải là integer
+    severity: error
+    given: "$.components.schemas.Book.properties.year"
+    then:
+      field: type
+      function: pattern
+      functionOptions:
+        match: "^integer$"
+
+  response-200-schema-not-empty:
+    description: Response 200 phải có schema và schema không được rỗng
+    severity: error
+    given: "$.paths.*.*.responses['200'].content.*"
+    then:
+      - field: schema
+        function: truthy
+      - field: schema
+        function: length
+        functionOptions:
+          min: 1
